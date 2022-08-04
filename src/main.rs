@@ -32,7 +32,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv().ok();
 
     let integration_id = env::var("INTEGRATION_ID").expect("Please configure integration ID");
-    let id = Uuid::new_v4();
+    let jti = Uuid::new_v4().to_string();
 
     let aud = env::var("AUD").expect("Please configure endpoint");
     let scope = env::var("SCOPE").expect("Please configure scope");
@@ -48,12 +48,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     let claim = Claims {
-        aud: aud,
-        scope: scope.to_string(),
-        iss: iss.to_string(),
+        aud,
+        scope,
+        iss,
         iat: unix_time,
         exp: unix_time + 120,
-        jti: id.to_string()
+        jti
     };
 
     let token = encode(&header, &claim, &EncodingKey::from_rsa_pem(include_bytes!("./../private.key"))?)?;
