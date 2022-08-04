@@ -1,11 +1,13 @@
 // https://blog.logrocket.com/making-http-requests-rust-reqwest/
 
 use std::collections::HashMap;
+use std::env;
 use serde::{Serialize, Deserialize};
 use jsonwebtoken::{encode, Header, Algorithm, EncodingKey};
 use uuid::Uuid;
 use std::time::{SystemTime, UNIX_EPOCH};
 use reqwest;
+use dotenv::dotenv;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Claims {
@@ -27,11 +29,13 @@ struct ApiResponse {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let integration_id = "c7e7e142-6527-4b90-8f23-faa9eee2fff4";
+    dotenv().ok();
+
+    let integration_id = env::var("INTEGRATION_ID").expect("Please configure integration ID");
     let id = Uuid::new_v4();
 
-    let aud = String::from("https://test.maskinporten.no/");
-    let scope = "digdir:statistikk.skriv";
+    let aud = env::var("AUD").expect("Please configure endpoint");
+    let scope = env::var("SCOPE").expect("Please configure scope");
     let iss = integration_id.clone();
     let token_endpoint = aud.clone() + "token";
 
@@ -52,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         jti: id.to_string()
     };
 
-    let token = encode(&header, &claim, &EncodingKey::from_rsa_pem(include_bytes!("keys.txt"))?)?;
+    let token = encode(&header, &claim, &EncodingKey::from_rsa_pem(include_bytes!("./../private.key"))?)?;
 
     let mut params = HashMap::new();
     params.insert("assertion", &*token);
